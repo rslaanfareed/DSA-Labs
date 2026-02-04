@@ -3,74 +3,58 @@
 #include <string>
 using namespace std;
 
-string infixToPostfix(string infix) {
+int prec(char c) {
+    if (c=='+' || c=='-') return 1;
+    if (c=='*' || c=='/') return 2;
+    if (c=='^') return 3;
+    return 0;
+}
 
-    //add '(' at top of stack and ')' at end
+bool rightAssoc(char c) {
+    return c=='^';
+}
+
+bool isOp(char c) {
+    return c=='+'||c=='-'||c=='*'||c=='/'||c=='^';
+}
+
+string infixToPostfix(string s) {
     stack<char> st;
+    string out;
     st.push('(');
-    infix += ')';
+    s += ')';
 
-    string postfix = "";
-
-    //scan from left to right
-    for (int i = 0; i < infix.length(); i++) {
-
-        char ch = infix[i];
-
-        // Step 3: if '(' push
-        if (ch == '(') {
-            st.push(ch);
+    for (char c : s) {
+        if (c=='(') st.push(c);
+        else if (isalnum(c)) out += c;
+        else if (isOp(c)) {
+            while (!st.empty() && isOp(st.top())) {
+                char t = st.top();
+                bool h = prec(t) > prec(c);
+                bool eqL = prec(t)==prec(c) && !rightAssoc(c);
+                if (h || eqL) {
+                    out += t;
+                    st.pop();
+                } else break;
+            }
+            st.push(c);
         }
-
-        //if operand then add to postfix
-        else if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')) {
-            postfix += ch;
-        }
-
-        //if operator encountered
-        else if (ch == '+' || ch == '-') {
-            while (!st.empty() && st.top() != '(') {
-                postfix += st.top();
+        else if (c==')') {
+            while (!st.empty() && st.top()!='(') {
+                out += st.top();
                 st.pop();
             }
-            st.push(ch);
-        }
-
-        else if (ch == '*' || ch == '/') {
-            while (!st.empty() && (st.top() == '*' || st.top() == '/' || st.top() == '^')) {
-                postfix += st.top();
-                st.pop();
-            }
-            st.push(ch);
-        }
-
-        else if (ch == '^') {
-            while (!st.empty() && st.top() == '^') {
-                postfix += st.top();
-                st.pop();
-            }
-            st.push(ch);
-        }
-
-        //if ')' pop until '('
-        else if (ch == ')') {
-            while (!st.empty() && st.top() != '(') {
-                postfix += st.top();
-                st.pop();
-            }
-            st.pop(); // remove '('
+            if (!st.empty()) st.pop();
         }
     }
-
-
-    return postfix;
+    return out;
 }
 
 int main() {
-    string infix;
-    cout << "Enter infix expression: ";
-    cin >> infix;
-
-    cout << "Postfix: " << infixToPostfix(infix) << endl;
-    return 0;
+    while(true){
+    string exp;
+    cout<<"Enter expression"<<endl;
+    cin>>exp;
+    cout << infixToPostfix(exp)<<endl;
+    }
 }
